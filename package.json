@@ -1,23 +1,36 @@
 {
   "name": "@aimbitgmbh/vikunja-mcp",
-  "version": "0.1.0",
-  "description": "MCP server for Vikunja task management",
+  "version": "1.0.0",
+  "description": "MCP server for Vikunja task management, project management, and Vikunja 2.6+ API v2",
   "type": "commonjs",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js"
+    }
+  },
   "bin": {
     "vikunja-mcp": "dist/index.js"
   },
   "files": [
     "dist",
     "docs/api-spec.json",
+    "CHANGELOG.md",
     "LICENSE",
     "README.md"
   ],
   "scripts": {
     "dev": "tsx --import dotenv/config src/index.ts",
-    "build": "tsc && chmod +x dist/index.js",
+    "build": "npm run clean && tsc && chmod +x dist/index.js",
+    "typecheck": "tsc --noEmit && tsc --project tsconfig.check.json",
+    "test": "tsx --test tests/*.test.ts",
+    "test:qwen": "tsx scripts/qwen-eval.ts",
+    "test:live": "tsx scripts/live-smoke.ts",
+    "check": "npm run typecheck && npm test",
     "clean": "rm -rf dist",
-    "prepublishOnly": "npm run build",
+    "prepack": "npm run build",
     "inspector": "npx @modelcontextprotocol/inspector tsx src/index.ts"
   },
   "keywords": [
@@ -27,6 +40,9 @@
     "ai-assistant",
     "ai-integration",
     "vikunja",
+    "vikunja-mcp",
+    "mcp-server",
+    "vikunja-api-v2",
     "tasks",
     "todo",
     "productivity",
@@ -51,17 +67,21 @@
     "email": "info@aimbit.de"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.25.1",
-    "dotenv": "^16.4.7",
-    "zod": "^4.3.4"
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "dotenv": "^17.4.2",
+    "undici": "^7.29.0",
+    "zod": "^4.5.4"
   },
   "devDependencies": {
-    "@types/node": "^25.0.3",
-    "ts-node": "^10.9.2",
-    "tsx": "^4.21.0",
+    "@types/node": "^20.19.43",
+    "tsx": "^4.23.13",
     "typescript": "^5.9.3"
   },
   "engines": {
-    "node": ">=18.0.0"
-  }
+    "node": ">=20.18.1"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "packageManager": "npm@10.8.2"
 }

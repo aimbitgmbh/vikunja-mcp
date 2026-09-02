@@ -1,57 +1,70 @@
-/**
- * Configuration management for Vikunja MCP Server
- * Loads and validates environment variables
- */
-
 import { z } from 'zod';
 
-/**
- * Environment variable schema
- */
-const ConfigSchema = z.object({
-  apiUrl: z.string().url().describe('Vikunja API URL (must include /api/v1 path)'),
-  apiToken: z.string().min(1).describe('Vikunja API token'),
-  verifySsl: z.boolean().default(true).describe('Verify SSL certificates'),
-  // Safety controls for dangerous operations
-  enableProjectDelete: z.boolean().default(false).describe('Enable permanent project deletion'),
-  enableLabelDelete: z.boolean().default(false).describe('Enable permanent label deletion'),
-  enableTaskDelete: z.boolean().default(false).describe('Enable permanent task deletion'),
+const BooleanEnv = z
+  .enum(['true', 'false'])
+  .optional()
+  .transform((value) => value === undefined ? undefined : value === 'true');
+
+const EnvironmentSchema = z.object({
+  VIKUNJA_URL: z.string().min(1),
+  VIKUNJA_API_TOKEN: z.string().min(1),
+  VERIFY_SSL: BooleanEnv,
+  VIKUNJA_REQUEST_TIMEOUT_MS: z.coerce.number().int().positive().max(300_000).optional(),
+  ENABLE_PROJECT_DELETE: BooleanEnv,
+  ENABLE_LABEL_DELETE: BooleanEnv,
+  ENABLE_TASK_DELETE: BooleanEnv,
+  ENABLE_NOTIFICATION_DELETE_ALL: BooleanEnv,
 });
 
-export type Config = z.infer<typeof ConfigSchema>;
-
-/**
- * Load and validate configuration from environment variables
- * @throws {Error} If required environment variables are missing or invalid
- */
-function loadConfig(): Config {
-  try {
-    const config = ConfigSchema.parse({
-      apiUrl: process.env.VIKUNJA_URL,
-      apiToken: process.env.VIKUNJA_API_TOKEN,
-      verifySsl: process.env.VERIFY_SSL !== 'false', // Default to true unless explicitly set to false
-      enableProjectDelete: process.env.ENABLE_PROJECT_DELETE === 'true', // Default to false (safe)
-      enableLabelDelete: process.env.ENABLE_LABEL_DELETE === 'true', // Default to false (safe)
-      enableTaskDelete: process.env.ENABLE_TASK_DELETE === 'true', // Default to false (safe)
-    });
-
-    return config;
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      const missingVars = error.issues
-        .map((issue) => issue.path.map(String).join('.'))
-        .join(', ');
-      throw new Error(
-        `Configuration error: Missing or invalid environment variables: ${missingVars}\n` +
-        'Please set VIKUNJA_URL and VIKUNJA_API_TOKEN environment variables.\n' +
-        'See .env.example for reference.'
-      );
-    }
-    throw error;
-  }
+export interface Config {
+  apiUrl: string;
+  apiToken: string;
+  verifySsl: boolean;
+  requestTimeoutMs: number;
+  enableProjectDelete: boolean;
+  enableLabelDelete: boolean;
+  enableTaskDelete: boolean;
+  enableNotificationDeleteAll: boolean;
 }
 
-/**
- * Global configuration instance
- */
-export const config = loadConfig();
+/** Accept an instance root or an old/new API URL and always target API v2. */
+export function normalizeVikunjaUrl(rawUrl: string): string {
+  const url = new URL(rawUrl);
+
+  if (!['http:', 'https:'].includes(url.protocol)) {
+    throw new Error('VIKUNJA_URL must use http or https.');
+  }
+  if (url.username || url.password) {
+    throw new Error('VIKUNJA_URL must not contain credentials.');
+  }
+
+  url.hash = '';
+  url.search = '';
+  const withoutTrailingSlash = url.pathname.replace(/\/+$/, '');
+  const instancePath = withoutTrailingSlash.replace(/\/api\/v(?:1|2)$/i, '');
+  url.pathname = `${instancePath}/api/v2`.replace(/\/{2,}/g, '/');
+
+  return url.toString().replace(/\/$/, '');
+}
+
+export function loadConfig(environment: NodeJS.ProcessEnv = process.env): Config {
+  const parsed = EnvironmentSchema.safeParse(environment);
+  if (!parsed.success) {
+    const fields = [...new Set(parsed.error.issues.map((issue) => String(issue.path[0])))];
+    throw new Error(
+      `Configuration error: missing or invalid ${fields.join(', ')}. ` +
+      'Set VIKUNJA_URL and VIKUNJA_API_TOKEN; see .env.example.'
+    );
+  }
+
+  return {
+    apiUrl: normalizeVikunjaUrl(parsed.data.VIKUNJA_URL),
+    apiToken: parsed.data.VIKUNJA_API_TOKEN,
+    verifySsl: parsed.data.VERIFY_SSL ?? true,
+    requestTimeoutMs: parsed.data.VIKUNJA_REQUEST_TIMEOUT_MS ?? 30_000,
+    enableProjectDelete: parsed.data.ENABLE_PROJECT_DELETE ?? false,
+    enableLabelDelete: parsed.data.ENABLE_LABEL_DELETE ?? false,
+    enableTaskDelete: parsed.data.ENABLE_TASK_DELETE ?? false,
+    enableNotificationDeleteAll: parsed.data.ENABLE_NOTIFICATION_DELETE_ALL ?? false,
+  };
+}

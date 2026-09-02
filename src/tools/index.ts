@@ -1,160 +1,78 @@
-/**
- * Tool exports and aggregation
- * Provides a single interface for all MCP tools
- */
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { VikunjaClient } from '../client.js';
+import type { Config } from '../config.js';
+import { ADVANCED_API_OPERATIONS, registerAdvancedTools } from './advanced.js';
+import { COLLABORATION_API_OPERATIONS, registerCollaborationTools } from './collaboration.js';
+import { CORE_API_OPERATIONS, registerCoreTools } from './core.js';
 
-// Export all tool functions - Tasks
-export {
-  tasksList,
-  tasksListAll,
-  taskGet,
-  taskCreate,
-  taskUpdate,
-  taskComplete,
-  taskDelete,
-  taskTools,
-} from './tasks.js';
+export const PUBLIC_TOOL_NAMES = [
+  'tasks_list',
+  'tasks_get',
+  'tasks_create',
+  'tasks_update',
+  'tasks_complete',
+  'tasks_delete',
+  'tasks_bulk_update',
+  'projects_list',
+  'projects_get',
+  'projects_create',
+  'projects_update',
+  'projects_archive',
+  'projects_delete',
+  'projects_duplicate',
+  'labels_list',
+  'labels_get',
+  'labels_create',
+  'labels_update',
+  'labels_delete',
+  'task_labels_add',
+  'task_labels_remove',
+  'task_labels_replace',
+  'task_comments_list',
+  'task_comments_get',
+  'task_comments_create',
+  'task_comments_update',
+  'task_comments_delete',
+  'task_assignees_list',
+  'task_assignees_add',
+  'task_assignees_replace',
+  'task_assignees_remove',
+  'task_relations_create',
+  'task_relations_delete',
+  'saved_filters_get',
+  'saved_filters_create',
+  'saved_filters_update',
+  'saved_filters_delete',
+  'notifications_list',
+  'notifications_mark_read',
+  'notifications_mark_all_read',
+  'notifications_delete_all',
+  'project_views_list',
+  'project_views_get',
+  'project_views_create',
+  'project_views_update',
+  'project_views_delete',
+  'view_buckets_list',
+  'view_buckets_create',
+  'view_buckets_update',
+  'view_buckets_delete',
+  'vikunja_info',
+] as const;
 
-// Export all tool functions - Projects
-export {
-  projectsList,
-  projectGet,
-  projectCreate,
-  projectUpdate,
-  projectArchive,
-  projectDelete,
-  projectTools,
-} from './projects.js';
+export const API_OPERATIONS = [
+  ...CORE_API_OPERATIONS,
+  ...COLLABORATION_API_OPERATIONS,
+  ...ADVANCED_API_OPERATIONS,
+] as const;
 
-// Export all tool functions - Labels
-export {
-  labelsList,
-  labelGet,
-  labelCreate,
-  labelUpdate,
-  labelDelete,
-  labelAddToTask,
-  labelRemoveFromTask,
-  labelsBulkSetOnTask,
-  labelTools,
-} from './labels.js';
-
-// Export all tool functions - Comments
-export {
-  commentsList,
-  commentGet,
-  commentCreate,
-  commentUpdate,
-  commentDelete,
-  commentTools,
-} from './comments.js';
-
-// Export all tool functions - Assignees
-export {
-  assigneesList,
-  assigneeAdd,
-  assigneesAddBulk,
-  assigneeRemove,
-  assigneeTools,
-} from './assignees.js';
-
-// Export all tool functions - Relations
-export {
-  relationCreate,
-  relationDelete,
-  relationTools,
-} from './relations.js';
-
-// Export all tool functions - Filters
-export {
-  filterGet,
-  filterCreate,
-  filterUpdate,
-  filterDelete,
-  filterTools,
-} from './filters.js';
-
-// Export all tool functions - Bulk Operations
-export {
-  tasksBulkUpdate,
-} from './bulk.js';
-
-// Export all tool functions - Notifications
-export {
-  notificationsList,
-  notificationGet,
-  notificationDelete,
-  notificationTools,
-} from './notifications.js';
-
-// Export all tool functions - Subscriptions
-export {
-  subscriptionGet,
-  subscriptionCreate,
-  subscriptionDelete,
-  subscriptionTools,
-} from './subscriptions.js';
-
-// Export all tool functions - Info
-export {
-  infoGet,
-  infoTools,
-} from './info.js';
-
-// Export all tool functions - Projects Advanced
-export {
-  projectDuplicate,
-} from './projects-advanced.js';
-
-// Export all tool functions - Views
-export {
-  viewsList,
-  viewGet,
-  viewCreate,
-  viewUpdate,
-  viewDelete,
-  viewTools,
-} from './views.js';
-
-// Export all tool functions - Buckets
-export {
-  bucketsList,
-  bucketCreate,
-  bucketUpdate,
-  bucketDelete,
-  bucketTools,
-} from './buckets.js';
-
-// Re-export tool definitions
-import { taskTools } from './tasks.js';
-import { projectTools } from './projects.js';
-import { labelTools } from './labels.js';
-import { commentTools } from './comments.js';
-import { assigneeTools } from './assignees.js';
-import { relationTools } from './relations.js';
-import { filterTools } from './filters.js';
-import { notificationTools } from './notifications.js';
-import { subscriptionTools } from './subscriptions.js';
-import { infoTools } from './info.js';
-import { viewTools } from './views.js';
-import { bucketTools } from './buckets.js';
-
-/**
- * Get all tool definitions for MCP server
- */
-export function getToolDefinitions() {
-  return [
-    ...taskTools,
-    ...projectTools,
-    ...labelTools,
-    ...commentTools,
-    ...assigneeTools,
-    ...relationTools,
-    ...filterTools,
-    ...notificationTools,
-    ...subscriptionTools,
-    ...infoTools,
-    ...viewTools,
-    ...bucketTools,
-  ];
+export function registerAllTools(server: McpServer, client: VikunjaClient, config: Config): void {
+  registerCoreTools(server, client, config);
+  registerCollaborationTools(server, client);
+  registerAdvancedTools(server, client, config);
 }
+
+export {
+  registerAdvancedTools,
+  registerCollaborationTools,
+  registerCoreTools,
+};

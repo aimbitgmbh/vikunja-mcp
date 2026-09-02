@@ -1,274 +1,143 @@
-/**
- * Shared utility functions for tool implementations
- */
+import type { Bucket, Label, Notification, Project, Task, User } from '../types.js';
 
-import type { Task, Project, Label } from '../types.js';
-
-/**
- * Format a date string to a human-readable format
- */
-export function formatDate(dateStr: string | undefined): string {
-  if (!dateStr) return 'None';
-
-  try {
-    const date = new Date(dateStr);
-    return date.toISOString().split('T')[0]; // Return YYYY-MM-DD
-  } catch {
-    return dateStr;
-  }
+export function positiveId(value: number, label = 'ID'): number {
+  if (!Number.isInteger(value) || value <= 0) throw new Error(`${label} must be a positive integer.`);
+  return value;
 }
 
-/**
- * Format priority as a human-readable string
- * Vikunja priorities: Higher number = higher priority
- */
-export function formatPriority(priority: number): string {
-  if (priority === 0) return 'None';
-  if (priority === 1) return 'Low';
-  if (priority === 2) return 'Medium';
-  if (priority === 3) return 'High';
-  if (priority >= 4) return 'Urgent';
-  return String(priority);
+export function encodeSegment(value: string | number): string {
+  return encodeURIComponent(String(value));
 }
 
-/**
- * Format a task for display (content-first, ID last pattern)
- */
-export function formatTask(task: Task): string {
-  const lines: string[] = [];
-
-  // Title (most important)
-  lines.push(task.title);
-  lines.push('');
-
-  // Description (if present)
-  if (task.description && task.description.trim()) {
-    lines.push(task.description);
-    lines.push('');
+export function normalizeHexColor(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+  const color = value.replace(/^#/, '');
+  if (color !== '' && !/^[0-9a-fA-F]{6}$/.test(color)) {
+    throw new Error('Color must be a six-digit hex value, with or without #.');
   }
-
-  // Key metadata
-  if (task.due_date) {
-    lines.push(`Due: ${formatDate(task.due_date)}`);
-  }
-
-  if (task.priority > 0) {
-    lines.push(`Priority: ${formatPriority(task.priority)}`);
-  }
-
-  if (task.done) {
-    lines.push(`Status: Completed ${task.done_at ? `(${formatDate(task.done_at)})` : ''}`);
-  } else {
-    lines.push('Status: Incomplete');
-  }
-
-  if (task.percent_done !== undefined && task.percent_done > 0) {
-    lines.push(`Progress: ${task.percent_done}%`);
-  }
-
-  lines.push(`Project ID: ${task.project_id}`);
-
-  // Labels (if present)
-  if (task.labels && task.labels.length > 0) {
-    lines.push(`Labels: ${task.labels.map(l => l.title).join(', ')}`);
-  }
-
-  // Assignees (if present)
-  if (task.assignees && task.assignees.length > 0) {
-    lines.push(`Assignees: ${task.assignees.map(a => a.username).join(', ')}`);
-  }
-
-  // ID at the end
-  lines.push('');
-  lines.push(`[ID: ${task.id}]`);
-
-  return lines.join('\n');
+  return color;
 }
 
-/**
- * Format a list of tasks for display
- */
-export function formatTaskList(tasks: Task[], limit?: number): string {
-  if (tasks.length === 0) {
-    return 'No tasks found.';
-  }
-
-  const displayTasks = limit && limit > 0 ? tasks.slice(0, limit) : tasks;
-  const lines: string[] = [];
-
-  lines.push(`Found ${tasks.length} task(s)`);
-  if (limit && tasks.length > limit) {
-    lines.push(`Showing first ${limit} results`);
-  }
-  lines.push('');
-
-  displayTasks.forEach((task, index) => {
-    lines.push(`${index + 1}. ${task.title}`);
-
-    // Add key info on same line
-    const info: string[] = [];
-    if (task.done) {
-      info.push('✓ Done');
-    }
-    if (task.due_date) {
-      info.push(`Due: ${formatDate(task.due_date)}`);
-    }
-    if (task.priority > 0) {
-      info.push(`Priority: ${formatPriority(task.priority)}`);
-    }
-
-    if (info.length > 0) {
-      lines.push(`   ${info.join(' | ')}`);
-    }
-
-    lines.push(`   [ID: ${task.id}, Project: ${task.project_id}]`);
-    lines.push('');
-  });
-
-  return lines.join('\n');
-}
-
-/**
- * Format a project for display
- */
-export function formatProject(project: Project): string {
-  const lines: string[] = [];
-
-  lines.push(project.title);
-  lines.push('');
-
-  if (project.description) {
-    lines.push(project.description);
-    lines.push('');
-  }
-
-  if (project.parent_project_id) {
-    lines.push(`Parent Project ID: ${project.parent_project_id}`);
-  }
-
-  if (project.hex_color) {
-    lines.push(`Color: ${project.hex_color}`);
-  }
-
-  if (project.is_archived) {
-    lines.push('Status: Archived');
-  }
-
-  if (project.is_favorite) {
-    lines.push('⭐ Favorite');
-  }
-
-  lines.push(`Owner: ${project.owner.username}`);
-  lines.push(`Created: ${formatDate(project.created)}`);
-  lines.push('');
-  lines.push(`[ID: ${project.id}]`);
-
-  return lines.join('\n');
-}
-
-/**
- * Format a list of projects for display
- */
-export function formatProjectList(projects: Project[]): string {
-  if (projects.length === 0) {
-    return 'No projects found.';
-  }
-
-  const lines: string[] = [];
-  lines.push(`Found ${projects.length} project(s)`);
-  lines.push('');
-
-  projects.forEach((project, index) => {
-    const info: string[] = [];
-    if (project.is_favorite) info.push('⭐');
-    if (project.is_archived) info.push('Archived');
-    if (project.parent_project_id) info.push(`Parent: ${project.parent_project_id}`);
-
-    lines.push(`${index + 1}. ${project.title}${info.length > 0 ? ' (' + info.join(', ') + ')' : ''}`);
-    lines.push(`   [ID: ${project.id}]`);
-    lines.push('');
-  });
-
-  return lines.join('\n');
-}
-
-/**
- * Format a label for display
- */
-export function formatLabel(label: Label): string {
-  const lines: string[] = [];
-
-  lines.push(label.title);
-  lines.push('');
-
-  if (label.description) {
-    lines.push(label.description);
-    lines.push('');
-  }
-
-  if (label.hex_color) {
-    lines.push(`Color: ${label.hex_color}`);
-  }
-
-  lines.push(`Created: ${formatDate(label.created)}`);
-  lines.push('');
-  lines.push(`[ID: ${label.id}]`);
-
-  return lines.join('\n');
-}
-
-/**
- * Format a list of labels for display
- */
-export function formatLabelList(labels: Label[]): string {
-  if (labels.length === 0) {
-    return 'No labels found.';
-  }
-
-  const lines: string[] = [];
-  lines.push(`Found ${labels.length} label(s)`);
-  lines.push('');
-
-  labels.forEach((label, index) => {
-    const colorInfo = label.hex_color ? ` (${label.hex_color})` : '';
-    lines.push(`${index + 1}. ${label.title}${colorInfo}`);
-    lines.push(`   [ID: ${label.id}]`);
-    lines.push('');
-  });
-
-  return lines.join('\n');
-}
-
-/**
- * Parse and validate a date string
- * Accepts formats: YYYY-MM-DD, ISO 8601
- */
-export function parseDate(dateStr: string): string {
-  // Try to parse the date
-  const date = new Date(dateStr);
-
-  if (isNaN(date.getTime())) {
-    throw new Error(`Invalid date format: "${dateStr}". Use YYYY-MM-DD or ISO 8601 format.`);
-  }
-
-  // Return ISO 8601 format for API
+export function parseDate(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) throw new Error(`Invalid date: ${value}`);
   return date.toISOString();
 }
 
-/**
- * Format before/after comparison for updates
- */
-export function formatBeforeAfter(
-  label: string,
-  before: string | number | boolean | undefined,
-  after: string | number | boolean | undefined
-): string {
-  const beforeStr = before !== undefined ? String(before) : 'None';
-  const afterStr = after !== undefined ? String(after) : 'None';
+export function progressToFraction(value: number | undefined): number | undefined {
+  if (value === undefined) return undefined;
+  if (value < 0 || value > 100) throw new Error('progressPercent must be between 0 and 100.');
+  return value / 100;
+}
 
-  if (beforeStr === afterStr) {
-    return `${label}: ${beforeStr} (unchanged)`;
-  }
+export function progressToPercent(value: number | undefined): number | undefined {
+  return value === undefined ? undefined : Math.round(value * 100);
+}
 
-  return `${label}:\n  Before: ${beforeStr}\n  After:  ${afterStr}`;
+function compactUser(user: User): Record<string, unknown> {
+  return { id: user.id, username: user.username, name: user.name };
+}
+
+export function compactTask(task: Task): Record<string, unknown> {
+  const taskReference = (related: Task): Record<string, unknown> => ({
+    id: related.id,
+    title: related.title,
+    done: related.done,
+    projectId: related.project_id,
+  });
+  const relatedTasks = task.related_tasks && Object.fromEntries(
+    Object.entries(task.related_tasks).map(([kind, tasks]) => [kind, tasks.map(taskReference)]),
+  );
+  const subtasks = Array.isArray(task.subtasks)
+    ? (task.subtasks as Task[]).map(taskReference)
+    : undefined;
+  const buckets = Array.isArray(task.buckets)
+    ? (task.buckets as Bucket[]).map((bucket) => ({ id: bucket.id, title: bucket.title }))
+    : undefined;
+
+  return {
+    id: task.id,
+    identifier: task.identifier,
+    title: task.title,
+    description: task.description,
+    projectId: task.project_id,
+    done: task.done,
+    progressPercent: progressToPercent(task.percent_done),
+    priority: task.priority,
+    dueDate: task.due_date,
+    startDate: task.start_date,
+    endDate: task.end_date,
+    isFavorite: task.is_favorite,
+    labels: task.labels?.map((label) => ({ id: label.id, title: label.title })),
+    assignees: task.assignees?.map(compactUser),
+    comments: task.comments?.map((comment) => ({
+      id: comment.id,
+      comment: comment.comment,
+      author: comment.author && compactUser(comment.author),
+      reactions: comment.reactions,
+      created: comment.created,
+      updated: comment.updated,
+    })),
+    relatedTasks,
+    subtasks,
+    buckets,
+    reactions: task.reactions,
+    commentCount: task.comment_count,
+    timeEntriesCount: task.time_entries_count,
+    isUnread: task.is_unread,
+    created: task.created,
+    updated: task.updated,
+  };
+}
+
+export function compactProject(project: Project): Record<string, unknown> {
+  return {
+    id: project.id,
+    title: project.title,
+    description: project.description,
+    identifier: project.identifier,
+    parentProjectId: project.parent_project_id,
+    isArchived: project.is_archived,
+    isFavorite: project.is_favorite,
+    hexColor: project.hex_color,
+    owner: project.owner ? compactUser(project.owner) : undefined,
+    subscription: project.subscription,
+    views: project.views,
+    created: project.created,
+    updated: project.updated,
+  };
+}
+
+export function compactLabel(label: Label): Record<string, unknown> {
+  return {
+    id: label.id,
+    title: label.title,
+    description: label.description,
+    hexColor: label.hex_color,
+    created: label.created,
+    updated: label.updated,
+  };
+}
+
+export function compactNotification(notification: Notification): Record<string, unknown> {
+  return {
+    id: notification.id,
+    name: notification.name,
+    notification: notification.notification,
+    read: notification.read,
+    readAt: notification.read_at,
+    created: notification.created,
+  };
+}
+
+export function compactBucket(bucket: Bucket): Record<string, unknown> {
+  return {
+    id: bucket.id,
+    title: bucket.title,
+    limit: bucket.limit,
+    position: bucket.position,
+    count: bucket.count,
+    tasks: bucket.tasks?.map(compactTask),
+  };
 }
