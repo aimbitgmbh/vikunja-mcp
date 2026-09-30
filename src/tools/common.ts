@@ -15,13 +15,6 @@ const PaginationOutputSchema = z.object({
   totalPages: z.number().int(),
 });
 
-export const ToolOutputSchema = z.object({
-  message: z.string(),
-  data: z.unknown().optional(),
-  items: z.array(z.unknown()).optional(),
-  pagination: PaginationOutputSchema.optional(),
-});
-
 export interface ToolPayload {
   message: string;
   data?: unknown;
@@ -101,7 +94,9 @@ export function registerJsonTool<S extends z.ZodTypeAny>(
       title: spec.title,
       description: spec.description,
       inputSchema: spec.inputSchema,
-      outputSchema: ToolOutputSchema,
+      // Omit the optional outputSchema until the SDK emits JSON Schema 2020-12.
+      // Its draft-07 dialect breaks Claude Desktop (GitHub issue #3); responses
+      // still include structuredContent and the same text representation.
       annotations: spec.annotations,
     },
     // The SDK's conditional callback type cannot resolve through a generic Zod schema.
