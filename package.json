@@ -1,6 +1,6 @@
 {
   "name": "@aimbitgmbh/vikunja-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MCP server for Vikunja task management, project management, and Vikunja 2.6+ API v2",
   "type": "commonjs",
   "main": "dist/index.js",
@@ -69,7 +69,7 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.30.0",
     "dotenv": "^17.4.2",
-    "undici": "^7.29.0",
+    "undici": "^7.30.0",
     "zod": "^4.5.4"
   },
   "devDependencies": {

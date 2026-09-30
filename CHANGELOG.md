@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.1 — 2026-09-30
+
+- Fixed tool calls in Claude Desktop by omitting the optional `outputSchema`, which the MCP SDK emits as unsupported JSON Schema draft-07 ([#3](https://github.com/aimbitgmbh/vikunja-mcp/issues/3)). Structured results and text output are preserved.
+- Updated Undici to 7.30.0 and refreshed the locked dependencies to address known security vulnerabilities.
+
 ## 1.0.0 — 2026-09-02
 
 First stable release.
