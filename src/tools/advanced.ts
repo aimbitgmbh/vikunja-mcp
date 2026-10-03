@@ -301,6 +301,12 @@ const BucketUpdateSchema = z.object({
   limit: z.number().int().min(0).optional(),
   position: z.number().min(0).optional(),
 }).strict();
+const BucketMoveTaskSchema = z.object({
+  projectId: IdSchema,
+  viewId: IdSchema,
+  bucketId: IdSchema,
+  taskId: IdSchema,
+}).strict();
 
 export function registerBucketTools(server: McpServer, client: VikunjaClient): void {
   registerJsonTool(server, {
@@ -341,6 +347,15 @@ export function registerBucketTools(server: McpServer, client: VikunjaClient): v
     await client.delete(`/projects/${projectId}/views/${viewId}/buckets/${bucketId}`);
     return { message: `Deleted bucket ${bucketId} from view ${viewId}.`, data: { projectId, viewId, bucketId } };
   });
+
+  registerJsonTool(server, {
+    name: 'view_buckets_move_task', title: 'Move a task to a kanban bucket',
+    description: 'Move a task into a bucket of a manual kanban view.',
+    inputSchema: BucketMoveTaskSchema, annotations: IDEMPOTENT_WRITE,
+  }, async ({ projectId, viewId, bucketId, taskId }) => {
+    await client.put(`/projects/${projectId}/views/${viewId}/buckets/${bucketId}/tasks`, { task_id: taskId });
+    return { message: `Moved task ${taskId} to bucket ${bucketId} in view ${viewId}.`, data: { projectId, viewId, bucketId, taskId } };
+  });
 }
 
 export function registerInfoTool(server: McpServer, client: VikunjaClient): void {
@@ -370,5 +385,6 @@ export const ADVANCED_API_OPERATIONS = [
   ['DELETE', '/projects/{project}/views/{view}'],
   ['GET', '/projects/{project}/views/{view}/buckets'], ['POST', '/projects/{project}/views/{view}/buckets'],
   ['PUT', '/projects/{project}/views/{view}/buckets/{bucket}'], ['DELETE', '/projects/{project}/views/{view}/buckets/{bucket}'],
+  ['PUT', '/projects/{project}/views/{view}/buckets/{bucket}/tasks'],
   ['GET', '/info'],
 ] as const;

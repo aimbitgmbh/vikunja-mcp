@@ -12,7 +12,7 @@ Version 1.0.0 is tested with **Qwen 3.8 27B** for reliable MCP tool selection. T
 
 ## Features
 
-- 51 focused MCP tools with consistent plural resource names
+- 52 focused MCP tools with consistent plural resource names
 - Tasks, projects, labels, comments, assignees, relations, and bulk updates
 - Saved filters, notifications, project views, and kanban buckets
 - Server-side search, filtering, sorting, expansion, and pagination
