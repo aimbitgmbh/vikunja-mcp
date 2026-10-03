@@ -30,7 +30,7 @@ test('publishes the complete, unique tool catalog', async (context) => {
   const result = await client.listTools();
   const names = result.tools.map((tool) => tool.name);
 
-  assert.equal(names.length, 51);
+  assert.equal(names.length, 52);
   assert.equal(new Set(names).size, names.length);
   assert.deepEqual(names, [...PUBLIC_TOOL_NAMES]);
   for (const tool of result.tools) {
@@ -92,4 +92,31 @@ test('returns paginated structured output and tool errors without outputSchema',
   const invalid = await client.callTool({ name: 'tasks_get', arguments: { id: -1 } });
   assert.equal(invalid.isError, true);
   assert.match(JSON.stringify(invalid.content), /Input validation error/);
+});
+
+test('moves a task into a kanban bucket', async (context) => {
+  const calls: Array<{ path: string; body: unknown }> = [];
+  const fakeClient = {
+    put: async (path: string, body: unknown) => { calls.push({ path, body }); return {}; },
+  } as unknown as VikunjaClient;
+  const { server } = createVikunjaServer(config, fakeClient);
+  const client = new Client({ name: 'test-client', version: '1.0.0' });
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+  context.after(async () => {
+    await client.close();
+    await server.close();
+  });
+
+  await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+  const moved = await client.callTool({
+    name: 'view_buckets_move_task',
+    arguments: { projectId: 42, viewId: 7, bucketId: 9, taskId: 15 },
+  });
+
+  assert.equal(moved.isError, undefined);
+  assert.deepEqual(calls, [{ path: '/projects/42/views/7/buckets/9/tasks', body: { task_id: 15 } }]);
+  assert.deepEqual(moved.structuredContent, {
+    message: 'Moved task 15 to bucket 9 in view 7.',
+    data: { projectId: 42, viewId: 7, bucketId: 9, taskId: 15 },
+  });
 });

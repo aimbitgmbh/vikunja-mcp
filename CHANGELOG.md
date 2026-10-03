@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Added `view_buckets_move_task` to move a task into another bucket of a manual kanban view (`PUT /projects/{project}/views/{view}/buckets/{bucket}/tasks`).
+
 ## 1.0.1 — 2026-09-30
 
 - Fixed tool calls in Claude Desktop by omitting the optional `outputSchema`, which the MCP SDK emits as unsupported JSON Schema draft-07 ([#3](https://github.com/aimbitgmbh/vikunja-mcp/issues/3)). Structured results and text output are preserved.
