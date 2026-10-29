@@ -350,7 +350,7 @@ export function registerBucketTools(server: McpServer, client: VikunjaClient): v
 
   registerJsonTool(server, {
     name: 'view_buckets_move_task', title: 'Move a task to a kanban bucket',
-    description: 'Move a task into a bucket of a manual kanban view.',
+    description: 'Move a task into a bucket of a manual kanban view. Moving into or out of the done bucket changes task completion; repeating tasks may reopen and return to the default bucket.',
     inputSchema: BucketMoveTaskSchema, annotations: IDEMPOTENT_WRITE,
   }, async ({ projectId, viewId, bucketId, taskId }) => {
     await client.put(`/projects/${projectId}/views/${viewId}/buckets/${bucketId}/tasks`, { task_id: taskId });

@@ -119,4 +119,13 @@ test('moves a task into a kanban bucket', async (context) => {
     message: 'Moved task 15 to bucket 9 in view 7.',
     data: { projectId: 42, viewId: 7, bucketId: 9, taskId: 15 },
   });
+
+  for (const invalid of [{ taskId: -1 }, { viewId: 0 }, { bucketId: 1.5 }, { projectId: '../other' }]) {
+    const rejected = await client.callTool({
+      name: 'view_buckets_move_task',
+      arguments: { projectId: 42, viewId: 7, bucketId: 9, taskId: 15, ...invalid },
+    });
+    assert.equal(rejected.isError, true);
+  }
+  assert.equal(calls.length, 1);
 });
