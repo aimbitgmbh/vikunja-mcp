@@ -61,6 +61,7 @@ const cases: EvaluationCase[] = [
   { expected: 'view_buckets_create', prompt: 'Create a kanban bucket named Review in view ID 7 of project ID 42.' },
   { expected: 'view_buckets_update', prompt: 'Rename bucket ID 9 in view ID 7 of project ID 42 to QA.' },
   { expected: 'view_buckets_delete', prompt: 'Delete bucket ID 9 from view ID 7 in project ID 42.' },
+  { expected: 'view_buckets_move_task', prompt: 'Move task ID 15 to bucket ID 9 in view ID 7 of project ID 42.' },
   { expected: 'vikunja_info', prompt: 'Which Vikunja server version am I connected to?' },
 ];
 

@@ -120,6 +120,7 @@ async function main(): Promise<void> {
     assert(bucketTwoId > 0);
     await call('view_buckets_list', { projectId, viewId });
     await call('view_buckets_update', { projectId, viewId, bucketId: bucketOneId, title: `${prefix}-updated` });
+    await call('view_buckets_move_task', { projectId, viewId, bucketId: bucketOneId, taskId: taskOneId });
     await call('view_buckets_delete', { projectId, viewId, bucketId: bucketTwoId });
     await call('project_views_delete', { projectId, viewId });
 

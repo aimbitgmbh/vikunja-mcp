@@ -56,6 +56,7 @@ export const PUBLIC_TOOL_NAMES = [
   'view_buckets_create',
   'view_buckets_update',
   'view_buckets_delete',
+  'view_buckets_move_task',
   'vikunja_info',
 ] as const;
 
