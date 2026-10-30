@@ -37,7 +37,7 @@ The package can run directly through `npx`:
   "mcpServers": {
     "vikunja": {
       "command": "npx",
-      "args": ["-y", "@aimbitgmbh/vikunja-mcp@1.0.1"],
+      "args": ["-y", "@aimbitgmbh/vikunja-mcp@1.1.0"],
       "env": {
         "VIKUNJA_URL": "https://vikunja.example.com",
         "VIKUNJA_API_TOKEN": "your-api-token"
@@ -52,7 +52,7 @@ The package can run directly through `npx`:
 To install it globally instead:
 
 ```bash
-npm install --global @aimbitgmbh/vikunja-mcp@1.0.1
+npm install --global @aimbitgmbh/vikunja-mcp@1.1.0
 vikunja-mcp
 ```
 

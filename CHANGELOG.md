@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.1.0 — 2026-10-30
 
 - Added `view_buckets_move_task` to move a task into another bucket of a manual kanban view (`PUT /projects/{project}/views/{view}/buckets/{bucket}/tasks`).
 - Updated the MCP SDK, HTTP client, validation library, and transitive dependencies to address published security advisories.
